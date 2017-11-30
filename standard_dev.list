@@ -1,0 +1,106 @@
+     1                                  ;
+     2                                  ; file: standard_dev.asm
+     3                                  
+     4                                  %include "asm_io.inc"
+     5                              <1> 	extern  read_int, print_int, print_string
+     6                              <1> 	extern	read_char, print_char, print_nl
+     7                              <1> 	extern  sub_dump_regs, sub_dump_mem, sub_dump_math, sub_dump_stack
+     8                              <1> 
+     9                              <1> %macro 	dump_regs 1
+    10                              <1> 	push	  dword %1
+    11                              <1> 	call	  sub_dump_regs
+    12                              <1> %endmacro
+    13                              <1> 
+    14                              <1> 
+    15                              <1> ;
+    16                              <1> ; usage: dump_mem label, start-address, # paragraphs
+    17                              <1> %macro  dump_mem 3
+    18                              <1> 	push	 dword %1
+    19                              <1> 	push	 dword %2
+    20                              <1> 	push	 dword %3
+    21                              <1> 	call	 sub_dump_mem
+    22                              <1> %endmacro
+    23                              <1> 
+    24                              <1> %macro	dump_math 1
+    25                              <1> 	push	 dword %1
+    26                              <1> 	call	 sub_dump_math
+    27                              <1> %endmacro
+    28                              <1> 
+    29                              <1> %macro  dump_stack 3
+    30                              <1> 	push	 dword %3
+    31                              <1>         push     dword %2
+    32                              <1> 	push	 dword %1
+    33                              <1>         call     sub_dump_stack
+    34                              <1> %endmacro
+    35                                  %include "defines.inc"
+    36                              <1> %define DOUBLE_SIZE 8
+    37                                  %define     n       dword[ebp + 12]
+    38                                  %define     array   dword[ebp + 8]
+    39                                  segment .bss
+    40                                  ; declare a temporary value for the average
+    41                                  
+    42                                  ;
+    43                                  ; code is put in the .text segment
+    44                                  ;
+    45                                  segment .text
+    46                                          global  standard_dev
+    47                                          extern  printf
+    48                                  
+    49                                  standard_dev:
+    50 00000000 C8000000                        enter   0,0               ; setup routine
+    51 00000004 60                              pusha
+    52                                          ; Calculate the average first
+    53 00000005 FF750C                          push    n
+    54 00000008 FF7508                          push    array
+    55 0000000B E806000000                      call    average
+    56                                  ; remember that the value for the average is in st0
+    57                                  ; you might want to consider moving the value into a temporary
+    58                                  ;
+    59 00000010 83C408                          add     esp,8
+    60 00000013 61                              popa
+    61 00000014 C9                              leave                     
+    62 00000015 C3                              ret
+    63                                  
+    64                                  segment .data
+    65 00000000 25660A00                L1 db "%f",10,0
+    66                                  ;
+    67                                  ; write the code necessary to calculate the average
+    68                                  ;
+    69                                  segment .bss
+    70 00000000 <res 00000004>          tmp resd 1
+    71                                  
+    72                                  segment .text
+    73                                          global  average
+    74                                          extern  printf
+    75                                  
+    76                                  average:
+    77 00000016 C8000000                        enter   0,0               ; setup routine
+    78 0000001A 8B7508                          mov     esi,array        
+    79 0000001D 8B4D0C                          mov     ecx,n
+    80 00000020 50                              push    eax
+    81 00000021 31D2                            xor     edx,edx
+    82 00000023 D9EE                            fldz    
+    83                                  ;total the sum of the
+    84                                  forloop01:
+    85 00000025 8B4508                          mov     eax,array
+    86 00000028 8D04D0                          lea     eax,[eax+DOUBLE_SIZE*edx]
+    87 0000002B DC00                            fadd    qword[eax]
+    88 0000002D 42                              inc     edx
+    89 0000002E E2F5                            loop    forloop01
+    90                                  end_forloop01:
+    91                                  
+    92 00000030 8915[00000000]                  mov   [tmp],edx
+    93 00000036 DA35[00000000]                  fidiv  dword[tmp]
+    94                                  
+    95 0000003C 58                              pop     eax
+    96 0000003D C9                              leave                     
+    97 0000003E C3                              ret
+    98                                  
+    99                                          ; the following will print out the value at the offset in the array
+   100                                          ;push    ecx
+   101                                          ;push    dword[eax+4]
+   102                                          ;push    dword[eax]
+   103                                          ;push    L1
+   104                                          ;call    printf
+   105                                          ;add     esp,12
+   106                                          ;pop     ecx

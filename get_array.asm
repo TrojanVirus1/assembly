@@ -12,8 +12,7 @@ L1 db 10,"memory allocated %d",10,"-------------",10,0
 
 segment .bss
 
-%define n dword[ebp + 12]
-%define array dword[ebp + 8]
+%define n dword[ebp + 8]
 
 segment .text
     global  get_array
@@ -22,7 +21,7 @@ segment .text
 
 get_array:
     enter   0,0
-	pusha
+	push    ebx
 
 	mov     eax,n 		; size of the array
 	mov 	ebx,DOUBLE_SIZE
@@ -32,10 +31,9 @@ get_array:
 	test    eax,eax
 	jz   	fail_exit
 	add     esp,4			; clean up the stack
-    mov     array,eax
 
 done:
-	popa
+    pop     ebx
     leave                     
     ret
 

@@ -9,7 +9,7 @@
 
 #include "cdecl.h"
 
-extern void PRE_CDECL get_array( double *, int ) POST_CDECL;
+extern double* PRE_CDECL get_array( int ) POST_CDECL;
 extern int PRE_CDECL read_doubles( FILE *, double *, int ) POST_CDECL;
 extern double PRE_CDECL standard_dev( double *, int ) POST_CDECL;
 
@@ -18,10 +18,10 @@ extern double PRE_CDECL standard_dev( double *, int ) POST_CDECL;
 int main()
 {
   int i,n;
-  double *a;
+  double *a=NULL;
   double stdev;
   
-  get_array(a,MAX);
+  a = get_array(MAX);
 
   n = read_doubles((fopen("numbers.txt", "r")), a, MAX);
 
